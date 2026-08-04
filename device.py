@@ -151,7 +151,7 @@ class Device:
 
   def reset_cores(self):
     with TLBWindow(self.pcie.fd, self.pcie.cores[0]) as win:
-      win.mcast(TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0, TensixMMIO.SOFT_RESET_ALL)
+      win.mcast32(TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0, TensixMMIO.SOFT_RESET_ALL)
 
   def init_device(self):
     images = (build_brisc(), build_ncrisc(), *(build_trisc(i) for i in range(3)))
@@ -160,7 +160,7 @@ class Device:
     firmware_base = Firmware.TEXT["brisc"][0]
     prefetch, dispatch = build_prefetch().lower(), build_dispatch().lower()
     with TLBWindow(self.pcie.fd, self.pcie.cores[0]) as win:
-      win.mcast(TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0, TensixMMIO.SOFT_RESET_ALL)
+      win.mcast32(TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0, TensixMMIO.SOFT_RESET_ALL)
       win.mcast(firmware_base, firmware)
       boot = RV32().jal(R.ZERO, firmware_base + 4).to_bytes(4, "little")
       win.mcast(TensixL1.BOOT, boot)
@@ -168,7 +168,10 @@ class Device:
       # complete word so the direct byte-sized CQ-core boot signal selects the
       # legacy (no-template) path.
       win.mcast(FirmwareControl.GO_SIGNAL & -4, 0)
-      win.mcast(TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0, TensixMMIO.SOFT_RESET_BRISC_ONLY_RUN)
+      win.mcast32(
+        TensixMMIO.RISCV_DEBUG_REG_SOFT_RESET_0,
+        TensixMMIO.SOFT_RESET_BRISC_ONLY_RUN,
+      )
       for core, image in ((self.pcie.prefetch_core, prefetch), (self.pcie.dispatch_core, dispatch)):
         win.target(0, core)
         win.write(TensixL1.WORKER_TEXT_BASE["brisc"], image)

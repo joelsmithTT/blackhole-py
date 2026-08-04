@@ -2,6 +2,8 @@ import ctypes, fcntl, os
 import ctypes.util
 from pathlib import Path
 
+import mmio
+
 libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
 libc.mmap.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_long]
 libc.mmap.restype = ctypes.c_void_p
@@ -197,10 +199,19 @@ class TLBWindow:
     data = value.to_bytes(bytes, "little") if isinstance(value, int) else value
     ctypes.memmove(self.addr + offset, data, len(data))
 
+  def read32(self, offset: int) -> int: return mmio.load32(self.addr + offset)
+
+  def write32(self, offset: int, value: int): mmio.store32(self.addr + offset, value)
+
   def mcast(self, addr: int, value, bytes=4):
     base = addr & -self.SIZE
     self.target(base, self.WORKER_START, self.WORKER_END)
     self.write(addr - base, value, bytes)
+
+  def mcast32(self, addr: int, value: int):
+    base = addr & -self.SIZE
+    self.target(base, self.WORKER_START, self.WORKER_END)
+    self.write32(addr - base, value)
 
   def close(self):
     if self.addr is not None:
