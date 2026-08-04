@@ -291,7 +291,7 @@ class CommandQueue:
     self.pcie.sysmem.flush()
     index = self.queue_index
     self._slot_free(index)
-    self.prefetch.write(PREFETCH_QUEUE + index * 4, len(record) >> 4)
+    self.prefetch.write32(PREFETCH_QUEUE + index * 4, len(record) >> 4)
     self.queue_index = (index + 1) % PREFETCH_QUEUE_ENTRIES
     self.issue_write += len(record)
 
@@ -374,9 +374,7 @@ class CommandQueue:
     slot_ready = time.perf_counter_ns()
     self.prefetch.write(PREFETCH_TRACE_BASE, self.noc + trace.offset)
     self.prefetch.write(PREFETCH_TRACE_END, self.noc + trace.offset + trace.size)
-    self.prefetch.write(
-      PREFETCH_QUEUE + index * 4, PREFETCH_TRACE_FLAG,
-    )
+    self.prefetch.write32(PREFETCH_QUEUE + index * 4, PREFETCH_TRACE_FLAG)
     submitted = time.perf_counter_ns()
     self.queue_index = (index + 1) % PREFETCH_QUEUE_ENTRIES
     self.dispatch_page = (
