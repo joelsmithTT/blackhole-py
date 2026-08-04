@@ -134,12 +134,15 @@ class Allocator:
 
 class Sysmem:
   PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
+  HUGE_PAGE_SIZE = 1 << 30
+  # MAP_SHARED | MAP_ANONYMOUS | MAP_HUGETLB | MAP_HUGE_1GB.
+  MMAP_FLAGS = 0x21 | 0x40000 | (30 << 26)
 
   def __init__(self, fd: int, size: int = 1 << 30):
     self.fd = fd
-    self.size = (size + self.PAGE_SIZE - 1) & -self.PAGE_SIZE
+    self.size = (size + self.HUGE_PAGE_SIZE - 1) & -self.HUGE_PAGE_SIZE
     self.allocator = Allocator(0, self.size, self.PAGE_SIZE)
-    self.addr = libc.mmap(None, self.size, 3, 0x21, -1, 0)
+    self.addr = libc.mmap(None, self.size, 3, self.MMAP_FLAGS, -1, 0)
     if self.addr == ctypes.c_void_p(-1).value:
       raise OSError(ctypes.get_errno(), "mmap sysmem failed")
     try:
