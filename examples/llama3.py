@@ -2680,7 +2680,7 @@ def run_decode_e2e(
     raise ValueError("the Instruct tokenizer is missing its chat template")
   prompt_ids = tokenizer.apply_chat_template(
     ({"role": "user", "content": prompt},),
-    tokenize=True, add_generation_prompt=True,
+    tokenize=True, add_generation_prompt=True, return_dict=False,
   )
   if not prompt_ids:
     raise ValueError("prompt tokenization produced no tokens")
