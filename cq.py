@@ -4,7 +4,7 @@ from struct import Struct
 from typing import ClassVar
 import time
 from fw.consts import Core
-from pcie import Allocator, TLBWindow
+from pcie import Allocator, P100_NOC0_BROADCAST, TLBWindow
 
 Rect = tuple[Core, Core]
 
@@ -91,7 +91,8 @@ def _check_mcast_endpoint(core: Core):
 def mcast_coords(rect: Rect):
   start, end = rect
   _check_mcast_endpoint(start); _check_mcast_endpoint(end)
-  if start[0] > end[0] or start[1] > end[1]: raise ValueError("multicast start must precede end")
+  if rect != P100_NOC0_BROADCAST and (start[0] > end[0] or start[1] > end[1]):
+    raise ValueError("multicast start must precede end")
   return noc_coord(start), noc_coord(end)
 
 

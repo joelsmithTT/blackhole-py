@@ -24,6 +24,7 @@ P100_WORKER_CORES = tuple(
   (x, y) for x in (*range(1, 8), *range(10, 15)) for y in range(2, 12)
   if (x, y) not in ((14, 2), (14, 3))
 )
+P100_NOC0_BROADCAST = ((2, 2), (1, 11))
 
 def _TT_IOCTL(nr, payload_type, result=None, **defaults):
   def call(fd, **kwargs):
@@ -175,7 +176,7 @@ class Sysmem:
 class TLBWindow:
   SIZE = 1 << 21
   USER_ID_LIMIT = 201
-  WORKER_START = (1, 2); WORKER_END = (14, 11)
+  WORKER_START, WORKER_END = P100_NOC0_BROADCAST
 
   def __init__(self, fd: int, core: tuple[int, int]):
     tlb = AllocateTlb(fd)
